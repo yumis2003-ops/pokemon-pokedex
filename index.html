@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ポケモンずかん - 初代赤緑スタイル</title>
+  <meta name="description" content="無料PokeAPIを活用した、ゲームボーイ時代のポケットモンスター赤・緑デザインを完全踏襲したポケモン図鑑Webアプリ。">
+  <link rel="stylesheet" href="style.css">
+  <!-- ポケモンデータとメインロジックを読み込む -->
+  <script src="pokemon_data.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+
+<div class="pokedex-container">
+  <!-- ポケモン図鑑筐体 -->
+  <div class="pokedex" role="main">
+    
+    <!-- 左側（メインスクリーン & コントローラー） -->
+    <section class="pokedex-left">
+      <!-- LEDインジケータ部分 -->
+      <div class="pokedex-left-top">
+        <div class="led-main" id="led-status" aria-label="Status indicator"></div>
+        <div class="led-sub led-red" aria-hidden="true"></div>
+        <div class="led-sub led-yellow" aria-hidden="true"></div>
+        <div class="led-sub led-green" aria-hidden="true"></div>
+      </div>
+      
+      <!-- 液晶ディスプレイ枠 -->
+      <div class="screen-border">
+        <div class="screen-header">
+          <span class="dot-text">POKÉDEX</span>
+        </div>
+        
+        <!-- モノクロ液晶画面 -->
+        <div class="screen-lcd" id="main-screen">
+          <div class="scanlines"></div>
+          <div class="pixel-grid"></div>
+          
+          <!-- 1. 起動画面 (Boot Screen) -->
+          <div class="screen-content active" id="screen-boot">
+            <h1 class="boot-logo">Nintendo</h1>
+            <div class="boot-text dot-text">©1995,1996,1998</div>
+          </div>
+          
+          <!-- 2. ポケモンリスト画面 (List Screen) -->
+          <div class="screen-content" id="screen-list">
+            <div class="list-header dot-text">ポケモン　ずかん</div>
+            <div class="list-container" id="pokemon-list-items" role="listbox">
+              <!-- JSで動的にリスト項目を流し込む -->
+            </div>
+            <div class="list-footer">
+              <span class="dot-text">けんさく: SELECT</span>
+            </div>
+          </div>
+          
+          <!-- 3. 詳細画面 (Detail Screen) -->
+          <div class="screen-content" id="screen-detail">
+            <div class="detail-header">
+              <span class="dot-text" id="detail-id">No.000</span>
+              <span class="dot-text" id="detail-name">--------</span>
+            </div>
+            <div class="detail-body">
+              <div class="detail-sprite-container">
+                <img id="detail-sprite" src="" alt="ポケモン画像" />
+              </div>
+              <div class="detail-stats dot-text">
+                <p>タイプ1/<span id="detail-type-1">-</span></p>
+                <p>タイプ2/<span id="detail-type-2">-</span></p>
+                <p>たかさ/<span id="detail-height">-</span>m</p>
+                <p>おもさ/<span id="detail-weight">-</span>kg</p>
+              </div>
+            </div>
+            <div class="detail-desc-box">
+              <div class="detail-desc-text dot-text" id="detail-desc">
+                じょうほうを　ロードちゅう…
+              </div>
+            </div>
+          </div>
+          
+          <!-- 4. 検索画面 (Search Screen) -->
+          <div class="screen-content" id="screen-search">
+            <div class="search-title dot-text">なまえで さがす</div>
+            <div class="search-input-area">
+              <span class="dot-text">▶</span>
+              <input type="text" id="search-input" readonly placeholder="なまえをいれる" aria-label="検索するポケモンの名前" />
+            </div>
+            <div class="search-keyboard" id="search-keyboard">
+              <!-- 50音キーボードをJSで生成 -->
+            </div>
+            <div class="search-footer dot-text">
+              A:けってい　B:もどる/クリア
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      
+      <!-- 操作コントローラー (左) -->
+      <div class="controls-left">
+        <!-- 十字キー (D-Pad) -->
+        <div class="d-pad" role="navigation" aria-label="Directional pad">
+          <button class="d-pad-btn d-pad-up" id="btn-up" aria-label="Up"></button>
+          <button class="d-pad-btn d-pad-right" id="btn-right" aria-label="Right"></button>
+          <button class="d-pad-btn d-pad-down" id="btn-down" aria-label="Down"></button>
+          <button class="d-pad-btn d-pad-left" id="btn-left" aria-label="Left"></button>
+          <div class="d-pad-center"></div>
+        </div>
+        
+        <!-- 中央のサウンドトグルスイッチ -->
+        <div class="status-panel">
+          <div class="sound-toggle-container">
+            <span class="dot-text font-small">SOUND</span>
+            <button class="toggle-switch" id="sound-toggle" role="switch" aria-checked="false" aria-label="Sound on/off"></button>
+          </div>
+        </div>
+        
+        <!-- A/Bボタン -->
+        <div class="action-buttons">
+          <div class="btn-action-container">
+            <button class="btn-action btn-b" id="btn-b" aria-label="B button">B</button>
+            <span class="dot-text font-small">CANCEL</span>
+          </div>
+          <div class="btn-action-container">
+            <button class="btn-action btn-a" id="btn-a" aria-label="A button">A</button>
+            <span class="dot-text font-small">OK</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- セレクト/スタートボタン -->
+      <div class="controls-bottom">
+        <div class="btn-bar-container">
+          <button class="btn-bar btn-select" id="btn-select" aria-label="Select button"></button>
+          <span class="dot-text font-small">SELECT</span>
+        </div>
+        <div class="btn-bar-container">
+          <button class="btn-bar btn-start" id="btn-start" aria-label="Start button"></button>
+          <span class="dot-text font-small">START</span>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 中央結合ヒンジ -->
+    <div class="pokedex-hinge" aria-hidden="true"></div>
+    
+    <!-- 右側（サブスクリーン & テンキー入力） -->
+    <section class="pokedex-right">
+      <!-- 右側サブディスプレイ -->
+      <div class="right-screen-border">
+        <div class="right-screen-lcd" id="right-screen">
+          <div class="scanlines"></div>
+          <div class="pixel-grid"></div>
+          
+          <!-- 右側起動画面 -->
+          <div class="right-content active" id="right-boot">
+            <div class="pokeball-icon"></div>
+          </div>
+          
+          <!-- 右側詳細比較画面 (たかさくらべ) -->
+          <div class="right-content" id="right-compare">
+            <div class="compare-title dot-text">たかさ　くらべ</div>
+            <div class="compare-area">
+              <div class="compare-trainer">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/red.png" alt="トレーナーのドット絵" />
+                <span class="dot-text font-small">1.7m</span>
+              </div>
+              <div class="compare-pokemon">
+                <img id="compare-pokemon-img" src="" alt="ポケモンの比較用画像" />
+                <span class="dot-text font-small" id="compare-pokemon-height">--.-m</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- テンキーパッド (図鑑番号直接ジャンプ用) -->
+      <div class="right-keypad" aria-label="Numeric keypad for pokemon number entry">
+        <div class="keypad-grid">
+          <button class="keypad-btn" data-val="1">1</button>
+          <button class="keypad-btn" data-val="2">2</button>
+          <button class="keypad-btn" data-val="3">3</button>
+          <button class="keypad-btn" data-val="4">4</button>
+          <button class="keypad-btn" data-val="5">5</button>
+          <button class="keypad-btn" data-val="6">6</button>
+          <button class="keypad-btn" data-val="7">7</button>
+          <button class="keypad-btn" data-val="8">8</button>
+          <button class="keypad-btn" data-val="9">9</button>
+          <button class="keypad-btn btn-black" data-val="clear">CLEAR</button>
+          <button class="keypad-btn" data-val="0">0</button>
+          <button class="keypad-btn btn-green" data-val="go">GO</button>
+        </div>
+      </div>
+      
+      <!-- レトロ装飾パーツ -->
+      <div class="right-decorations" aria-hidden="true">
+        <div class="decor-bar"></div>
+        <div class="decor-bar"></div>
+        <div class="decor-dot"></div>
+      </div>
+    </section>
+    
+  </div>
+</div>
+
+</body>
+</html>
